@@ -7,6 +7,7 @@ class Jugador:
         
         # El slot de reserva: None significa vacío. Si hay una Carta, está ocupado.
         self.reserva = None 
+        self.mano = None # La carta que el jugador tiene en la mano (si la hay)
         self.bloqueado = False
         
         # Inicialización del mazo enlazado con las 11 cartas
@@ -27,6 +28,33 @@ class Jugador:
     def guardar_en_reserva(self, carta):
         """Intenta guardar una carta. Falla si ya hay una."""
         if self.reserva is None:
-            self.reserva = carta
+            self.reserva = self.mano
+            self.mano = None
             return True
         return False # No se puede guardar, el slot está ocupado
+    
+    def descartar_reserva(self):
+        """Descarta la carta en reserva, si hay una."""
+        if self.reserva is not None:
+            if self.reserva.tipo == 'Bronce' and self.fase_actual() == 'Bronce':
+                self.bronce += 1
+            elif self.reserva.tipo == 'Plata':
+                self.plata += 1
+            elif self.reserva.tipo == 'Oro' and self.fase_actual() == 'Oro':
+                self.oro += 1
+            self.reserva = None
+            return True
+        return False # No hay carta para descartar
+    
+    def robar_carta(self):
+        """Roba la carta superior del mazo."""
+        return self.mazo.extraer_del_frente()
+    
+    def robar (self):
+        """Intenta robar una carta. Si el slot de mano está ocupado, no se puede robar."""
+        if self.mano is None:
+            self.mano = self.robar_carta()
+            return True
+        return False # No se puede robar, el slot está ocupado
+    
+    
