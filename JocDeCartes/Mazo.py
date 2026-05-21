@@ -1,5 +1,7 @@
 import random
 
+from Node import Nodo
+
 class Mazo:
     def __init__(self):
         self.cabeza = None

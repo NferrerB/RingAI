@@ -1,3 +1,6 @@
+from Carta import Carta
+from Mazo import Mazo
+
 class Jugador:
     def __init__(self, nombre):
         self.nombre = nombre
@@ -11,7 +14,7 @@ class Jugador:
         self.bloqueado = False
         
         # Inicialización del mazo enlazado con las 11 cartas
-        self.mazo = MazoEnlazado()
+        self.mazo = Mazo()
         cartas_base = [Carta('Bronce') for _ in range(7)] + \
                       [Carta('Plata') for _ in range(3)] + \
                       [Carta('Oro') for _ in range(1)]
@@ -27,9 +30,11 @@ class Jugador:
             
     def guardar_en_reserva(self, carta):
         """Intenta guardar una carta. Falla si ya hay una."""
-        if self.reserva is None:
-            self.reserva = self.mano
-            self.mano = None
+        carta_a_guardar = carta if carta is not None else self.mano
+        if self.reserva is None and carta_a_guardar is not None:
+            self.reserva = carta_a_guardar
+            if carta_a_guardar == self.mano:
+                self.mano = None
             return True
         return False # No se puede guardar, el slot está ocupado
     
@@ -54,7 +59,7 @@ class Jugador:
         """Intenta robar una carta. Si el slot de mano está ocupado, no se puede robar."""
         if self.mano is None:
             self.mano = self.robar_carta()
-            return True
+            return self.mano is not None
         return False # No se puede robar, el slot está ocupado
-    
+
     
