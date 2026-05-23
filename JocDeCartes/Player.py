@@ -1,6 +1,5 @@
 from Carta import Carta
 from Mazo import Mazo
-from aima3.games import Game, GameState
 
 class Jugador:
     def __init__(self, nombre):

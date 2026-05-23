@@ -1,5 +1,6 @@
 
 from aima3.games import Game, GameState
+from Player import Jugador
 
 class JuegoDeCartas(Game):
     def __init__(self, jugador, ia):
@@ -218,3 +219,13 @@ class JuegoDeCartas(Game):
     def utilidad(self, estado, jugador):
         """Define la función de utilidad para cada jugador."""
         pass
+
+
+if __name__ == '__main__':
+    # Crear jugadores
+    jugador_humano = Jugador("Jugador")
+    ia_bot = Jugador("IA-Bot")
+    
+    # Crear y ejecutar el juego
+    juego = JuegoDeCartas(jugador_humano, ia_bot)
+    juego.ejecutar_juego()
