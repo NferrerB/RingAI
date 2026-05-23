@@ -1,5 +1,6 @@
 from Carta import Carta
 from Mazo import Mazo
+from aima3.games import Game, GameState
 
 class Jugador:
     def __init__(self, nombre):
@@ -61,21 +62,27 @@ class Jugador:
             self.mano = self.robar_carta()
             return self.mano is not None
         return False # No se puede robar, el slot está ocupado
-    
-    """TODO : Arreglar para que funcione con teclas del teclado y no con un switch case, que es más propio de otros lenguajes como Java o C++. En Python, se puede usar un diccionario para simular un switch case."""
-    def seleccionar_accion(self):
-        """Aquí se implementaría la lógica para decidir qué acción tomar en cada turno.
-        Por ahora, es un placeholder que siempre intenta robar."""
-        if (self.fase_actual() == 'Bronce' and self.bronce < 7) :
-            switcher = {
-                        'Bronce': self.robar,
-                        'Plata': self.guardar_en_reserva,
-                        'Oro': self.descartar_reserva
-                    }
-        
-        accion = switcher.get(self.fase_actual(), lambda: None) 
-        return accion() 
 
-    
+def descartar_mano(jugador):
+    if jugador.mano is not None and jugador.mano.tipo == jugador.fase_actual():
+        carta_a_descartar = jugador.mano
+        if carta_a_descartar.tipo == 'Bronce':
+            jugador.bronce += 1
+        elif carta_a_descartar.tipo == 'Plata':
+            jugador.plata += 1
+        elif carta_a_descartar.tipo == 'Oro':
+            jugador.oro += 1
+        
+        jugador.mano = None
+        return carta_a_descartar
+    return None
+
+def bloquear_jugador(jugador):
+    jugador.bloqueado = True
+
+def devolver_carta_a_mazo(jugador):
+    if jugador.mano is not None:
+        jugador.mazo.agregar_al_final(jugador.mano)
+        jugador.mano = None
 
     
