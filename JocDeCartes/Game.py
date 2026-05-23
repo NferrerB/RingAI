@@ -66,8 +66,9 @@ class JuegoDeCartas(Game):
             print("5. Bloquear oponente")
             print("6. Devolver carta de la mano al mazo")
             print("7. Terminar turno sin hacer nada")
+            print("8. Salir del juego")
             
-            opcion = input("\nSelecciona una opción (1-4): ").strip()
+            opcion = input("\nSelecciona una opción (1-8): ").strip()
             
             if opcion == '1':
                 if self.jugador.robar():
@@ -146,21 +147,55 @@ class JuegoDeCartas(Game):
         """
         acciones = 0
         
-        # Estrategia simple: intenta descartar si puede, sino guarda en reserva
-        # Esto puede mejorarse significativamente
+        # La IA usara el codigo implementado en IA.py para decidir su jugada
+        # Las jugadas posibles seran: robar, guardar en reserva, descartar reserva, 
+        # descartar mano, bloquear jugador o devolver carta a mazo
+        
         fase = self.ia.fase_actual()
         
-        # Si tiene carta en mano y puede descartar, lo intenta
-        if self.ia.reserva is not None and fase == 'Oro':
+        # Estrategia: 
+        # 1. Descartar reserva si es posible
+        if self.ia.reserva is not None:
             if self.ia.descartar_reserva():
                 print(f"  → IA descarta reserva")
                 acciones += 1
         
-        # Si tiene mano vacía, intenta guardar en reserva
+        # 2. Descartar mano si el tipo coincide con la fase actual
+        if self.ia.mano is not None and self.ia.mano.tipo == fase:
+            carta_descartada = self.ia.mano
+            self.ia.mano = None
+            if carta_descartada.tipo == 'Bronce':
+                self.ia.bronce += 1
+            elif carta_descartada.tipo == 'Plata':
+                self.ia.plata += 1
+            elif carta_descartada.tipo == 'Oro':
+                self.ia.oro += 1
+            print(f"  → IA descarta carta de la mano")
+            acciones += 1
+        
+        # 3. Guardar en reserva si aún hay carta en mano y reserva está vacía
         elif self.ia.mano is not None and self.ia.reserva is None:
             if self.ia.guardar_en_reserva(None):
-                print(f"  → IA guarda carta en reserva: {self.ia.reserva.tipo}")
+                print(f"  → IA guarda carta en reserva")
                 acciones += 1
+        
+        # 4. Robar si la mano está vacía
+        elif self.ia.mano is None:
+            if self.ia.robar():
+                print(f"  → IA roba una carta: {self.ia.mano.tipo}")
+                acciones += 1
+        
+        # 5. Bloquear jugador si no ha hecho nada aún y el jugador no está bloqueado
+        if acciones == 0 and not self.jugador.bloqueado:
+            if bloquear_jugador(self.jugador):
+                print(f"  → IA bloquea al jugador")
+                acciones += 1
+        
+        # 6. Devolver carta al mazo si aún no ha hecho nada
+        if acciones == 0 and self.ia.mano is not None:
+            devolver_carta_a_mazo(self.ia)
+            print(f"  → IA devuelve carta de mano al mazo")
+            acciones += 1
         
         return acciones
     
