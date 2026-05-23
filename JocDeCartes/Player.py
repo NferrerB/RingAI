@@ -77,8 +77,12 @@ def descartar_mano(jugador):
         return carta_a_descartar
     return None
 
-def bloquear_jugador(jugador):
-    jugador.bloqueado = True
+def bloquear_jugador(oponente):
+    """Bloquea al oponente (si no está bloqueado ya)."""
+    if not oponente.bloqueado:
+        oponente.bloqueado = True
+        return True
+    return False
 
 def devolver_carta_a_mazo(jugador):
     if jugador.mano is not None:

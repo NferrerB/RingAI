@@ -1,6 +1,6 @@
 
 from aima3.games import Game, GameState
-from Player import Jugador, devolver_carta_a_mazo
+from Player import Jugador, bloquear_jugador, devolver_carta_a_mazo
 
 class JuegoDeCartas(Game):
     def __init__(self, jugador, ia):
@@ -62,28 +62,30 @@ class JuegoDeCartas(Game):
             print("1. Robar carta")
             print("2. Guardar en reserva")
             print("3. Descartar reserva")
-            print("4. Terminar turno")
+            print("4. Descartar carta de la mano")
             print("5. Bloquear oponente")
+            print("6. Devolver carta de la mano al mazo")
+            print("7. Terminar turno sin hacer nada")
             
-            opcion = input("\nSelecciona una opción (1-5): ").strip()
+            opcion = input("\nSelecciona una opción (1-4): ").strip()
             
             if opcion == '1':
                 if self.jugador.robar():
-                    print(f"✓ Carta robada: {self.jugador.mano.tipo}")
+                    print(f"\n✓ Carta robada: {self.jugador.mano.tipo}")
                     accion_realizada = False  # Termina el turno después de robar
                 else:
                     print("✗ No puedes robar (mano ocupada)")
                     
             elif opcion == '2':
                 if self.jugador.guardar_en_reserva(None):
-                    print(f"✓ Carta guardada en reserva: {self.jugador.reserva.tipo}")
+                    print(f"\n✓ Carta guardada en reserva: {self.jugador.reserva.tipo}")
                     accion_realizada = False  # Termina el turno después de guardar
                 else:
                     print("✗ No puedes guardar (reserva ocupada o mano vacía)")
                     
             elif opcion == '3':
                 if self.jugador.descartar_reserva():
-                    print(f"✓ Reserva descartada")
+                    print(f"\n✓ Reserva descartada")
                     print(f"  Fase actual: {self.jugador.fase_actual()}")
                     print(f"  Bronce: {self.jugador.bronce}/7 | Plata: {self.jugador.plata}/3 | Oro: {self.jugador.oro}/1")
                     accion_realizada = False  # Termina el turno después de descartar
@@ -96,8 +98,21 @@ class JuegoDeCartas(Game):
                 accion_realizada = False # Termina el turno sin descartar
             elif opcion == '5':
                 print("\n ✓ Bloquea a tu oponente (si no está bloqueado) y termina tu turno.")
-                bloquear_jugador(self.jugador)
+                if bloquear_jugador(self.ia):
+                    print("✓ Oponente bloqueado.")
+                else:
+                    print("✗ El oponente ya estaba bloqueado.")
                 accion_realizada = False # Termina el turno después de bloquear
+            elif opcion == '6':
+                print("\n✓ Devuelve la carta de la mano al mazo.")
+                devolver_carta_a_mazo(self.jugador)
+                accion_realizada = False # Termina el turno después de devolver la carta
+            elif opcion == '7':
+                print("\n✓Termina tu turno sin hacer nada.")
+                accion_realizada = False # Termina el turno sin hacer nada
+            elif opcion == '8':
+                print("\n✓ Salir de la partida.")
+                exit()
             else:
                 print("✗ Opción inválida. Intenta de nuevo.")
             
