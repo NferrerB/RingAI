@@ -1,6 +1,6 @@
 
 from aima3.games import Game, GameState
-from Player import Jugador
+from Player import Jugador, devolver_carta_a_mazo
 
 class JuegoDeCartas(Game):
     def __init__(self, jugador, ia):
@@ -63,18 +63,21 @@ class JuegoDeCartas(Game):
             print("2. Guardar en reserva")
             print("3. Descartar reserva")
             print("4. Terminar turno")
+            print("5. Bloquear oponente")
             
-            opcion = input("\nSelecciona una opción (1-4): ").strip()
+            opcion = input("\nSelecciona una opción (1-5): ").strip()
             
             if opcion == '1':
                 if self.jugador.robar():
                     print(f"✓ Carta robada: {self.jugador.mano.tipo}")
+                    accion_realizada = False  # Termina el turno después de robar
                 else:
                     print("✗ No puedes robar (mano ocupada)")
                     
             elif opcion == '2':
                 if self.jugador.guardar_en_reserva(None):
                     print(f"✓ Carta guardada en reserva: {self.jugador.reserva.tipo}")
+                    accion_realizada = False  # Termina el turno después de guardar
                 else:
                     print("✗ No puedes guardar (reserva ocupada o mano vacía)")
                     
@@ -83,12 +86,18 @@ class JuegoDeCartas(Game):
                     print(f"✓ Reserva descartada")
                     print(f"  Fase actual: {self.jugador.fase_actual()}")
                     print(f"  Bronce: {self.jugador.bronce}/7 | Plata: {self.jugador.plata}/3 | Oro: {self.jugador.oro}/1")
+                    accion_realizada = False  # Termina el turno después de descartar
                 else:
                     print("✗ No tienes carta en reserva para descartar")
                     
             elif opcion == '4':
-                print("\n✓ Turno del jugador finalizado")
-                accion_realizada = False
+                print("\n✓ Devuelve la carta de tu mano al mazo (si tienes una) y termina tu turno.")
+                devolver_carta_a_mazo(self.jugador)
+                accion_realizada = False # Termina el turno sin descartar
+            elif opcion == '5':
+                print("\n ✓ Bloquea a tu oponente (si no está bloqueado) y termina tu turno.")
+                bloquear_jugador(self.jugador)
+                accion_realizada = False # Termina el turno después de bloquear
             else:
                 print("✗ Opción inválida. Intenta de nuevo.")
             
