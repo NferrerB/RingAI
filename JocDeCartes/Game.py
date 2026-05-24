@@ -16,6 +16,9 @@ class JuegoDeCartas(Game):
         self.turno_actual = None  # Quién juega: 'jugador' o 'ia'
         self.juego_activo = True
         self.historial_turnos = []
+        # Control de bloqueo: impide que la IA rebloquee en el turno siguiente al desbloqueo
+        self.jugador_fue_desbloqueado_esta_ronda = False
+        self.ia_fue_desbloqueada_esta_ronda = False
         
     def iniciar_juego(self):
         """Inicia el juego y comienza con el turno del jugador."""
@@ -53,6 +56,7 @@ class JuegoDeCartas(Game):
         if self.jugador.bloqueado:
             print(f"✗ {self.jugador.nombre} está bloqueado y SALTA este turno.")
             desbloquear_jugador(self.jugador)
+            self.jugador_fue_desbloqueado_esta_ronda = True  # Marcar que fue desbloqueado
             print(f"✓ {self.jugador.nombre} ha sido desbloqueado.")
             return
         
@@ -143,6 +147,7 @@ class JuegoDeCartas(Game):
         if self.ia.bloqueado:
             print(f"✗ La IA está bloqueada y SALTA este turno.")
             desbloquear_jugador(self.ia)
+            self.ia_fue_desbloqueada_esta_ronda = True  # Marcar que fue desbloqueada
             print(f"✓ La IA ha sido desbloqueada.")
             return
         
@@ -204,7 +209,8 @@ class JuegoDeCartas(Game):
                 acciones += 1
         
         # 5. Bloquear jugador si no ha hecho nada aún y el jugador no está bloqueado
-        if acciones == 0 and not self.jugador.bloqueado:
+        # y no fue desbloqueado en esta ronda (para evitar ciclo de bloqueo/desbloqueo)
+        if acciones == 0 and not self.jugador.bloqueado and not self.jugador_fue_desbloqueado_esta_ronda:
             if bloquear_jugador(self.jugador):
                 print(f"  → IA bloquea al jugador")
                 acciones += 1
@@ -267,6 +273,10 @@ class JuegoDeCartas(Game):
             self.turno_ia()
             
             numero_ronda += 1
+            
+            # Resetear flags de desbloqueo para la siguiente ronda
+            self.jugador_fue_desbloqueado_esta_ronda = False
+            self.ia_fue_desbloqueada_esta_ronda = False
             
             # Pausa entre rondas
             input("\nPresiona Enter para continuar a la siguiente ronda...")
