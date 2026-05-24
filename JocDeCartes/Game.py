@@ -1,6 +1,6 @@
 
 from aima3.games import Game, GameState
-from Player import Jugador, bloquear_jugador, devolver_carta_a_mazo
+from Player import Jugador, bloquear_jugador, devolver_carta_a_mazo, descartar_mano
 
 class JuegoDeCartas(Game):
     def __init__(self, jugador, ia):
@@ -87,16 +87,20 @@ class JuegoDeCartas(Game):
             elif opcion == '3':
                 if self.jugador.descartar_reserva():
                     print(f"\n✓ Reserva descartada")
-                    print(f"  Fase actual: {self.jugador.fase_actual()}")
-                    print(f"  Bronce: {self.jugador.bronce}/7 | Plata: {self.jugador.plata}/3 | Oro: {self.jugador.oro}/1")
                     accion_realizada = False  # Termina el turno después de descartar
                 else:
-                    print("✗ No tienes carta en reserva para descartar")
+                    print("✗ No tienes carta en reserva para descartar o no coincide con tu fase")
+
                     
             elif opcion == '4':
-                print("\n✓ Devuelve la carta de tu mano al mazo (si tienes una) y termina tu turno.")
-                devolver_carta_a_mazo(self.jugador)
-                accion_realizada = False # Termina el turno sin descartar
+                print("\n✓ Intenta descartar la carta de tu mano.")
+                carta_descartada = descartar_mano(self.jugador)
+                if carta_descartada:
+                    print(f"✓ Carta descartada: {carta_descartada.tipo}")
+                    accion_realizada = False
+                else:
+                    print("✗ No puedes descartar (mano vacía o carta no coincide con tu fase)")
+
             elif opcion == '5':
                 print("\n ✓ Bloquea a tu oponente (si no está bloqueado) y termina tu turno.")
                 if bloquear_jugador(self.ia):
@@ -203,7 +207,7 @@ class JuegoDeCartas(Game):
         """Muestra el estado actual del jugador."""
         print(f"\n📊 Estado de {jugador.nombre}:")
         print(f"  Fase: {jugador.fase_actual()}")
-        print(f"  Bronce: {jugador.bronce}/7 | Plata: {jugador.plata}/3 | Oro: {jugador.oro}/1")
+        print(f"  Bronce: {jugador.bronce}/6 | Plata: {jugador.plata}/3 | Oro: {jugador.oro}/1")
         print(f"  Mano: {jugador.mano.tipo if jugador.mano else 'Vacía'}")
         print(f"  Reserva: {jugador.reserva.tipo if jugador.reserva else 'Vacía'}")
     
@@ -211,7 +215,7 @@ class JuegoDeCartas(Game):
         """Muestra el estado actual de la IA."""
         print(f"\n📊 Estado de la IA:")
         print(f"  Fase: {ia.fase_actual()}")
-        print(f"  Bronce: {ia.bronce}/7 | Plata: {ia.plata}/3 | Oro: {ia.oro}/1")
+        print(f"  Bronce: {ia.bronce}/6 | Plata: {ia.plata}/3 | Oro: {ia.oro}/1")
         print(f"  Mano: {ia.mano.tipo if ia.mano else 'Vacía'}")
         print(f"  Reserva: {ia.reserva.tipo if ia.reserva else 'Vacía'}")
     
@@ -258,8 +262,8 @@ class JuegoDeCartas(Game):
         print(f"FIN DEL JUEGO")
         print(f"{'='*40}")
         print(f"\nResultado Final:")
-        print(f"  {self.jugador.nombre}: Bronce {self.jugador.bronce}/7 | Plata {self.jugador.plata}/3 | Oro {self.jugador.oro}/1")
-        print(f"  IA: Bronce {self.ia.bronce}/7 | Plata {self.ia.plata}/3 | Oro {self.ia.oro}/1")
+        print(f"  {self.jugador.nombre}: Bronce {self.jugador.bronce}/6 | Plata {self.jugador.plata}/3 | Oro {self.jugador.oro}/1")
+        print(f"  IA: Bronce {self.ia.bronce}/6 | Plata {self.ia.plata}/3 | Oro {self.ia.oro}/1")
         print(f"\n{self.determinar_ganador()}")
     
     # Métodos requeridos por la clase Game de aima3

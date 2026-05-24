@@ -14,9 +14,9 @@ class Jugador:
         self.mano = None # La carta que el jugador tiene en la mano (si la hay)
         self.bloqueado = False
         
-        # Inicialización del mazo enlazado con las 11 cartas
+        # Inicialización del mazo enlazado con las 10 cartas
         self.mazo = Mazo()
-        cartas_base = [Carta('Bronce') for _ in range(7)] + \
+        cartas_base = [Carta('Bronce') for _ in range(6)] + \
                       [Carta('Plata') for _ in range(3)] + \
                       [Carta('Oro') for _ in range(1)]
         self.mazo.inicializar_y_mezclar(cartas_base)
@@ -44,10 +44,13 @@ class Jugador:
         if self.reserva is not None:
             if self.reserva.tipo == 'Bronce' and self.fase_actual() == 'Bronce':
                 self.bronce += 1
-            elif self.reserva.tipo == 'Plata':
+            elif self.reserva.tipo == 'Plata' and self.fase_actual() == 'Plata':
                 self.plata += 1
             elif self.reserva.tipo == 'Oro' and self.fase_actual() == 'Oro':
                 self.oro += 1
+            else:
+                # No puedes descartar una carta que no coincide con tu fase actual
+                return False
             self.reserva = None
             return True
         return False # No hay carta para descartar
