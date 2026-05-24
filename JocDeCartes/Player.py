@@ -22,7 +22,7 @@ class Jugador:
         self.mazo.inicializar_y_mezclar(cartas_base)
 
     def fase_actual(self):
-        if self.bronce < 7:
+        if self.bronce < 6:
             return 'Bronce'
         elif self.plata < 3:
             return 'Plata'
@@ -44,10 +44,13 @@ class Jugador:
         if self.reserva is not None:
             if self.reserva.tipo == 'Bronce' and self.fase_actual() == 'Bronce':
                 self.bronce += 1
+                self.fase_actual() # Actualiza la fase después de ganar un bronce, si este llega al limite
             elif self.reserva.tipo == 'Plata' and self.fase_actual() == 'Plata':
                 self.plata += 1
+                self.fase_actual() # Actualiza la fase después de ganar una plata, si esta llega al limite
             elif self.reserva.tipo == 'Oro' and self.fase_actual() == 'Oro':
                 self.oro += 1
+                self.fase_actual() # Actualiza la fase después de ganar un oro, si este llega al limite
             else:
                 # No puedes descartar una carta que no coincide con tu fase actual
                 return False
@@ -71,10 +74,13 @@ def descartar_mano(jugador):
         carta_a_descartar = jugador.mano
         if carta_a_descartar.tipo == 'Bronce':
             jugador.bronce += 1
+            jugador.fase_actual() # Actualiza la fase después de ganar un bronce, si este llega al limite
         elif carta_a_descartar.tipo == 'Plata':
             jugador.plata += 1
+            jugador.fase_actual() # Actualiza la fase después de ganar una plata, si esta llega al limite
         elif carta_a_descartar.tipo == 'Oro':
             jugador.oro += 1
+            jugador.fase_actual() # Actualiza la fase después de ganar un oro, si este llega al limite
         
         jugador.mano = None
         return carta_a_descartar
