@@ -105,4 +105,11 @@ def devolver_carta_a_mazo(jugador):
         jugador.mazo.agregar_al_final(jugador.mano)
         jugador.mano = None
 
+def devolver_reserva_a_mazo(jugador):
+    """Devuelve la carta en reserva al mazo, si hay una."""
+    if jugador.reserva is not None:
+        jugador.mazo.agregar_al_final(jugador.reserva)
+        jugador.reserva = None
+        return True
+    return False
     

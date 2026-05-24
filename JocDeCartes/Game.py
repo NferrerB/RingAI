@@ -1,6 +1,6 @@
 
 from aima3.games import Game, GameState
-from Player import Jugador, bloquear_jugador, devolver_carta_a_mazo, descartar_mano, desbloquear_jugador
+from Player import Jugador, bloquear_jugador, devolver_carta_a_mazo, devolver_reserva_a_mazo, descartar_mano, desbloquear_jugador
 from IA import IA, alphabeta_cutoff_search
 from copy import deepcopy
 
@@ -78,10 +78,11 @@ class JuegoDeCartas(Game):
             print("4. Descartar carta de la mano")
             print("5. Bloquear oponente")
             print("6. Devolver carta de la mano al mazo")
-            print("7. Terminar turno sin hacer nada")
-            print("8. Salir del juego")
+            print("7. Devolver carta de reserva al mazo")
+            print("8. Terminar turno sin hacer nada")
+            print("9. Salir del juego")
             
-            opcion = input("\nSelecciona una opción (1-8): ").strip()
+            opcion = input("\nSelecciona una opción (1-9): ").strip()
             
             if opcion == '1':
                 if self.jugador.robar():
@@ -126,9 +127,16 @@ class JuegoDeCartas(Game):
                 devolver_carta_a_mazo(self.jugador)
                 accion_realizada = False # Termina el turno después de devolver la carta
             elif opcion == '7':
+                print("\n✓ Devuelve la carta de reserva al mazo.")
+                if devolver_reserva_a_mazo(self.jugador):
+                    print("✓ Reserva devuelta al mazo")
+                    accion_realizada = False # Termina el turno después de devolver la reserva
+                else:
+                    print("✗ No tienes carta en reserva para devolver")
+            elif opcion == '8':
                 print("\n✓Termina tu turno sin hacer nada.")
                 accion_realizada = False # Termina el turno sin hacer nada
-            elif opcion == '8':
+            elif opcion == '9':
                 print("\n✓ Salir de la partida.")
                 exit()
             else:
