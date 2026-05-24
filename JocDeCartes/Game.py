@@ -1,6 +1,8 @@
 
 from aima3.games import Game, GameState
 from Player import Jugador, bloquear_jugador, devolver_carta_a_mazo, descartar_mano, desbloquear_jugador
+from IA import IA, alphabeta_cutoff_search
+from copy import deepcopy
 
 class JuegoDeCartas(Game):
     def __init__(self, jugador, ia):
@@ -165,58 +167,64 @@ class JuegoDeCartas(Game):
     
     def _ejecutar_estrategia_ia(self):
         """
-        Ejecuta la estrategia de la IA.
+        Ejecuta la estrategia de la IA usando alphabeta_cutoff_search.
         Retorna el número de acciones realizadas.
         """
         acciones = 0
         
-        # La IA usara el codigo implementado en IA.py para decidir su jugada
-        # Las jugadas posibles seran: robar, guardar en reserva, descartar reserva, 
-        # descartar mano, bloquear jugador o devolver carta a mazo
+        # Obtener el estado actual
+        estado = self._serializar_estado()
         
-        fase = self.ia.fase_actual()
+        # Definir la función de corte (profundidad máxima de búsqueda)
+        def cutoff_test(state, depth):
+            return depth > 3  # Buscar hasta profundidad 3
         
-        # Estrategia: 
-        # 1. Descartar reserva si es posible
-        if self.ia.reserva is not None:
-            if self.ia.descartar_reserva():
-                print(f"  → IA descarta reserva")
-                acciones += 1
+        # Usar alphabeta_cutoff_search para encontrar la mejor acción
+        mejor_accion = alphabeta_cutoff_search(
+            estado, 
+            self, 
+            d=3,
+            cutoff_test=cutoff_test,
+            eval_fn=self.utility
+        )
         
-        # 2. Descartar mano si el tipo coincide con la fase actual
-        if self.ia.mano is not None and self.ia.mano.tipo == fase:
-            carta_descartada = self.ia.mano
-            self.ia.mano = None
-            if carta_descartada.tipo == 'Bronce':
-                self.ia.bronce += 1
-            elif carta_descartada.tipo == 'Plata':
-                self.ia.plata += 1
-            elif carta_descartada.tipo == 'Oro':
-                self.ia.oro += 1
-            print(f"  → IA descarta carta de la mano")
-            acciones += 1
+        if mejor_accion is None:
+            return acciones
         
-        # 3. Guardar en reserva si aún hay carta en mano y reserva está vacía
-        elif self.ia.mano is not None and self.ia.reserva is None:
-            if self.ia.guardar_en_reserva(None):
-                print(f"  → IA guarda carta en reserva")
-                acciones += 1
-        
-        # 4. Robar si la mano está vacía
-        elif self.ia.mano is None:
+        # Ejecutar la mejor acción encontrada
+        if mejor_accion == ('robar',):
             if self.ia.robar():
                 print(f"  → IA roba una carta: {self.ia.mano.tipo}")
                 acciones += 1
         
-        # 5. Bloquear jugador si no ha hecho nada aún y el jugador no está bloqueado
-        # y no fue desbloqueado en esta ronda (para evitar ciclo de bloqueo/desbloqueo)
-        if acciones == 0 and not self.jugador.bloqueado and not self.jugador_fue_desbloqueado_esta_ronda:
+        elif mejor_accion == ('guardar_reserva',):
+            if self.ia.guardar_en_reserva(None):
+                print(f"  → IA guarda carta en reserva")
+                acciones += 1
+        
+        elif mejor_accion == ('descartar_reserva',):
+            if self.ia.descartar_reserva():
+                print(f"  → IA descarta reserva")
+                acciones += 1
+        
+        elif mejor_accion == ('devolver_reserva',):
+            if self.ia.reserva is not None:
+                self.ia.reserva = None
+                print(f"  → IA devuelve reserva al mazo")
+                acciones += 1
+        
+        elif mejor_accion == ('descartar_mano',):
+            carta_descartada = descartar_mano(self.ia)
+            if carta_descartada:
+                print(f"  → IA descarta carta de la mano")
+                acciones += 1
+        
+        elif mejor_accion == ('bloquear',):
             if bloquear_jugador(self.jugador):
                 print(f"  → IA bloquea al jugador")
                 acciones += 1
         
-        # 6. Devolver carta al mazo si aún no ha hecho nada
-        if acciones == 0 and self.ia.mano is not None:
+        elif mejor_accion == ('devolver_mazo',):
             devolver_carta_a_mazo(self.ia)
             print(f"  → IA devuelve carta de mano al mazo")
             acciones += 1
@@ -290,28 +298,156 @@ class JuegoDeCartas(Game):
         print(f"  IA: Bronce {self.ia.bronce}/6 | Plata {self.ia.plata}/3 | Oro {self.ia.oro}/1")
         print(f"\n{self.determinar_ganador()}")
     
-    # Métodos requeridos por la clase Game de aima3
-    def acciones_legales(self, estado):
-        """Define las acciones legales para el estado actual."""
-        pass
+    # Métodos requeridos por alphabeta_cutoff_search
+    def to_move(self, state):
+        """Retorna de quién es el turno en el estado actual."""
+        return state['turno']
     
-    def resultado(self, estado, accion):
-        """Define cómo cambia el estado después de una acción."""
-        pass
+    def actions(self, state):
+        """Retorna las acciones disponibles para la IA en el estado actual."""
+        ia_state = state['ia']
+        jugador_state = state['jugador']
+        acciones = []
+        
+        # 1. Robar si la mano está vacía
+        if ia_state['mano'] is None:
+            acciones.append(('robar',))
+        
+        # 2. Guardar en reserva si hay carta en mano y reserva está vacía
+        if ia_state['mano'] is not None and ia_state['reserva'] is None:
+            acciones.append(('guardar_reserva',))
+        
+        # 3. Descartar reserva solo si coincide con la fase actual
+        if ia_state['reserva'] is not None and ia_state['reserva']['tipo'] == ia_state['fase']:
+            acciones.append(('descartar_reserva',))
+        
+        # 3b. Devolver reserva al mazo si NO coincide con la fase actual
+        if ia_state['reserva'] is not None and ia_state['reserva']['tipo'] != ia_state['fase']:
+            acciones.append(('devolver_reserva',))
+        
+        # 4. Descartar mano si coincide con la fase actual
+        if ia_state['mano'] is not None and ia_state['mano']['tipo'] == ia_state['fase']:
+            acciones.append(('descartar_mano',))
+        
+        # 5. Bloquear oponente si no está bloqueado
+        if not jugador_state['bloqueado'] and not self.jugador_fue_desbloqueado_esta_ronda:
+            acciones.append(('bloquear',))
+        
+        # 6. Devolver carta al mazo si hay carta en mano
+        if ia_state['mano'] is not None:
+            acciones.append(('devolver_mazo',))
+        
+        return acciones if acciones else [('pasar',)]
     
-    def es_terminal(self, estado):
-        """Define la condición de fin del juego."""
-        return self.juego_terminado()
+    def _obtener_fase(self, bronce, plata, oro):
+        """Retorna la fase actual basada en los contadores."""
+        if bronce < 6:
+            return 'Bronce'
+        elif plata < 3:
+            return 'Plata'
+        else:
+            return 'Oro'
     
-    def utilidad(self, estado, jugador):
-        """Define la función de utilidad para cada jugador."""
-        pass
+    def _serializar_estado(self):
+        """Convierte el estado actual a un diccionario para alphabeta_cutoff_search."""
+        return {
+            'jugador': {
+                'bronce': self.jugador.bronce,
+                'plata': self.jugador.plata,
+                'oro': self.jugador.oro,
+                'mano': {'tipo': self.jugador.mano.tipo} if self.jugador.mano else None,
+                'reserva': {'tipo': self.jugador.reserva.tipo} if self.jugador.reserva else None,
+                'bloqueado': self.jugador.bloqueado,
+                'fase': self.jugador.fase_actual()
+            },
+            'ia': {
+                'bronce': self.ia.bronce,
+                'plata': self.ia.plata,
+                'oro': self.ia.oro,
+                'mano': {'tipo': self.ia.mano.tipo} if self.ia.mano else None,
+                'reserva': {'tipo': self.ia.reserva.tipo} if self.ia.reserva else None,
+                'bloqueado': self.ia.bloqueado,
+                'fase': self.ia.fase_actual()
+            },
+            'turno': 'ia'
+        }
+    
+    def result(self, state, action):
+        """Aplica la acción al estado y retorna el nuevo estado."""
+        nuevo_estado = deepcopy(state)
+        ia_state = nuevo_estado['ia']
+        jugador_state = nuevo_estado['jugador']
+        
+        if action == ('robar',):
+            # Simular robo de carta (asumimos que siempre hay cartas)
+            ia_state['mano'] = {'tipo': 'Bronce'}  # Simplificación
+        
+        elif action == ('guardar_reserva',):
+            if ia_state['mano'] is not None and ia_state['reserva'] is None:
+                ia_state['reserva'] = ia_state['mano']
+                ia_state['mano'] = None
+        
+        elif action == ('descartar_reserva',):
+            if ia_state['reserva'] is not None:
+                tipo_reserva = ia_state['reserva']['tipo']
+                if tipo_reserva == 'Bronce' and ia_state['fase'] == 'Bronce':
+                    ia_state['bronce'] += 1
+                elif tipo_reserva == 'Plata' and ia_state['fase'] == 'Plata':
+                    ia_state['plata'] += 1
+                elif tipo_reserva == 'Oro' and ia_state['fase'] == 'Oro':
+                    ia_state['oro'] += 1
+                ia_state['reserva'] = None
+                ia_state['fase'] = self._obtener_fase(ia_state['bronce'], ia_state['plata'], ia_state['oro'])
+        
+        elif action == ('devolver_reserva',):
+            # Devuelve la reserva al mazo si no coincide con la fase actual
+            ia_state['reserva'] = None
+        
+        elif action == ('descartar_mano',):
+            if ia_state['mano'] is not None:
+                tipo_mano = ia_state['mano']['tipo']
+                if tipo_mano == 'Bronce':
+                    ia_state['bronce'] += 1
+                elif tipo_mano == 'Plata':
+                    ia_state['plata'] += 1
+                elif tipo_mano == 'Oro':
+                    ia_state['oro'] += 1
+                ia_state['mano'] = None
+                ia_state['fase'] = self._obtener_fase(ia_state['bronce'], ia_state['plata'], ia_state['oro'])
+        
+        elif action == ('bloquear',):
+            jugador_state['bloqueado'] = True
+        
+        elif action == ('devolver_mazo',):
+            ia_state['mano'] = None
+        
+        return nuevo_estado
+    
+    def terminal_test(self, state):
+        """Prueba si el estado es terminal (fin del juego)."""
+        return state['ia']['oro'] >= 1 or state['jugador']['oro'] >= 1
+    
+    def utility(self, state, player=None):
+        """Función de utilidad para evaluar un estado."""
+        ia_state = state['ia']
+        jugador_state = state['jugador']
+        
+        # Evaluación básica: considerar progreso en fases
+        # Puntos por avance de fases
+        ia_score = ia_state['bronce'] + ia_state['plata'] * 2 + ia_state['oro'] * 10
+        jugador_score = jugador_state['bronce'] + jugador_state['plata'] * 2 + jugador_state['oro'] * 10
+        
+        # Bonificación si el oponente está bloqueado
+        if jugador_state['bloqueado']:
+            ia_score += 2
+        
+        return ia_score - jugador_score
 
 
 if __name__ == '__main__':
     # Crear jugadores
     jugador_humano = Jugador("Jugador")
-    ia_bot = Jugador("IA-Bot")
+    ia_bot = IA("IA-Bot")
     
     # Crear y ejecutar el juego
     juego = JuegoDeCartas(jugador_humano, ia_bot)

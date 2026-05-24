@@ -1,16 +1,23 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from dataclasses import dataclass
-from typing import Any, Callable, Iterable, Optional
+from typing import Any, Callable, Optional, Iterable
 
-from aima3.games import Game, GameState
-from aima3.games import alphabeta_search, alphabeta_cutoff_search
+from aima3.games import Game
+from Player import Jugador
 
 State = Any
 EvaluateFn = Callable[[State], float]
 ChildrenFn = Callable[[State], Iterable[State]]
 TerminalFn = Callable[[State], bool]
+
+
+class IA(Jugador):
+    """Clase IA que hereda de Jugador e implementa estrategia con alphabeta_search."""
+    
+    def __init__(self, nombre="IA"):
+        super().__init__(nombre)
+
 
 def alphabeta_cutoff_search(state: State, game: Game, d: int = 4, cutoff_test: Optional[Callable[[State, int], bool]] = None, eval_fn: Optional[EvaluateFn] = None) -> State:
     """Search game to determine best action; use alpha-beta pruning.
