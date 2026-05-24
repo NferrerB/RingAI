@@ -93,6 +93,13 @@ def bloquear_jugador(oponente):
         return True
     return False
 
+def desbloquear_jugador(jugador):
+    """Desbloquea al jugador (si está bloqueado)."""
+    if jugador.bloqueado:
+        jugador.bloqueado = False
+        return True
+    return False
+
 def devolver_carta_a_mazo(jugador):
     if jugador.mano is not None:
         jugador.mazo.agregar_al_final(jugador.mano)

@@ -1,6 +1,6 @@
 
 from aima3.games import Game, GameState
-from Player import Jugador, bloquear_jugador, devolver_carta_a_mazo, descartar_mano
+from Player import Jugador, bloquear_jugador, devolver_carta_a_mazo, descartar_mano, desbloquear_jugador
 
 class JuegoDeCartas(Game):
     def __init__(self, jugador, ia):
@@ -32,13 +32,18 @@ class JuegoDeCartas(Game):
         Args:
             jugador_actual: El jugador cuyo turno es (Jugador o IA)
         """
-        if jugador_actual.mano is None:
+        if jugador_actual.mano is None and jugador_actual.bloqueado == False:
             carta_robada = jugador_actual.robar()
             nombre = jugador_actual.nombre if hasattr(jugador_actual, 'nombre') else "IA"
             if carta_robada:
                 print(f"→ {nombre} roba una carta: {jugador_actual.mano.tipo}")
             else:
                 print(f"⚠ {nombre} no pudo robar carta (mazo vacío)")
+        elif jugador_actual.bloqueado:
+            print(f"⚠ {jugador_actual.nombre if hasattr(jugador_actual, 'nombre') else 'IA'} está bloqueado y no puede jugar.")
+            self.desbloquear_jugador(jugador_actual)
+            accion_realizada = True # El turno se considera realizado aunque el jugador esté bloqueado
+            return accion_realizada
         
     def turno_jugador(self):
         """
