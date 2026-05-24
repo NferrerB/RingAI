@@ -32,18 +32,13 @@ class JuegoDeCartas(Game):
         Args:
             jugador_actual: El jugador cuyo turno es (Jugador o IA)
         """
-        if jugador_actual.mano is None and jugador_actual.bloqueado == False:
+        if jugador_actual.mano is None:
             carta_robada = jugador_actual.robar()
             nombre = jugador_actual.nombre if hasattr(jugador_actual, 'nombre') else "IA"
             if carta_robada:
                 print(f"→ {nombre} roba una carta: {jugador_actual.mano.tipo}")
             else:
                 print(f"⚠ {nombre} no pudo robar carta (mazo vacío)")
-        elif jugador_actual.bloqueado:
-            print(f"⚠ {jugador_actual.nombre if hasattr(jugador_actual, 'nombre') else 'IA'} está bloqueado y no puede jugar.")
-            self.desbloquear_jugador(jugador_actual)
-            accion_realizada = True # El turno se considera realizado aunque el jugador esté bloqueado
-            return accion_realizada
         
     def turno_jugador(self):
         """
@@ -53,6 +48,13 @@ class JuegoDeCartas(Game):
         print(f"\n{'='*40}")
         print(f"TURNO DEL JUGADOR: {self.jugador.nombre}")
         print(f"{'='*40}")
+        
+        # Verificar si el jugador está bloqueado
+        if self.jugador.bloqueado:
+            print(f"✗ {self.jugador.nombre} está bloqueado y SALTA este turno.")
+            desbloquear_jugador(self.jugador)
+            print(f"✓ {self.jugador.nombre} ha sido desbloqueado.")
+            return
         
         # Robar carta al inicio del turno si es necesario
         self.robar_carta_si_necesario(self.jugador)
@@ -136,6 +138,13 @@ class JuegoDeCartas(Game):
         print(f"\n{'='*40}")
         print(f"TURNO DE LA IA")
         print(f"{'='*40}")
+        
+        # Verificar si la IA está bloqueada
+        if self.ia.bloqueado:
+            print(f"✗ La IA está bloqueada y SALTA este turno.")
+            desbloquear_jugador(self.ia)
+            print(f"✓ La IA ha sido desbloqueada.")
+            return
         
         # Robar carta al inicio del turno si es necesario
         self.robar_carta_si_necesario(self.ia)
