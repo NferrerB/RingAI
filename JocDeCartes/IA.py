@@ -27,13 +27,13 @@ def alphabeta_cutoff_search(state: State, game: Game, d: int = 4, cutoff_test: O
     def max_value(state: State, alpha: float, beta: float, depth: int) -> float:
         if cutoff_test is not None and cutoff_test(state, depth):
             return eval_fn(state)
-        v = float("-inf")
+        value = float("-inf")
         for a in game.actions(state):
-            v = max(v, min_value(game.result(state, a), alpha, beta, depth + 1))
-            if v >= beta:
-                return v
-            alpha = max(alpha, v)
-        return v
+            value = max(value, min_value(game.result(state, a), alpha, beta, depth + 1))
+            if value >= beta:
+                return value
+            alpha = max(alpha, value)
+        return value
 
     def min_value(state: State, alpha: float, beta: float, depth: int) -> float:
         if cutoff_test is not None and cutoff_test(state, depth):
@@ -56,5 +56,6 @@ def alphabeta_cutoff_search(state: State, game: Game, d: int = 4, cutoff_test: O
             best_score = v
             best_action = a
     return best_action
+
 
 
