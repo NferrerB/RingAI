@@ -50,29 +50,25 @@ class LaberintAnellOr:
             # La heurística depende del nodo actual dentro del estado
             nodo_actual, _ = nodo.state
             return self.heuristica.get(nodo_actual, 0)
+        #Calcul de la ruta desde el punt inicial amb A*
         self.nodo_meta = astar_search(self.problema, h=calcular_h)
-        if self.nodo_meta:
-            # Extraemos los nodos de la solución
-            camino = [nodo.state[0] for nodo in self.nodo_meta.path()]
-            print("Grafo 100% conectado. Camino forzado por reglas de estado:")
-            print(" -> ".join(camino))
-            print(f"Costo total: {self.nodo_meta.path_cost}")
-            self.minimo_coste=self.nodo_meta.path_cost
-        else:
-            print("No se encontró una ruta que cumpla las condiciones.")
 
     def recalcular_ruta(self):
+        # Cada vez que se mueve el jugador, recalculamos el mapa, la heurística y el problema para reflejar los cambios en el estado del juego
         self.mapa, self.heuristica, self.problema = self.calcular_ruta()
         def calcular_h(nodo):
             # La heurística depende del nodo actual dentro del estado
             nodo_actual, _ = nodo.state
             return self.heuristica.get(nodo_actual, 0)
+        # Recalculamos la ruta desde el punto actual con A*
         self.nodo_meta = astar_search(self.problema, h=calcular_h)
         if(self.minimo_coste==0):
             self.minimo_coste=self.nodo_meta.path_cost
     def calcular_ruta(self):
+        # Para calcular el mapa de conexiones entre nodos, necesitamos considerar las posiciones actuales de los anillos pendientes y el jugador, y calcular los pasos mínimos entre ellos teniendo en cuenta las barreras.
         nodos = [str(i) for i in range(0, 11)]
         mapa_total = {nodo: {} for nodo in nodos}
+        # Calculamos los pasos mínimos entre cada par de nodos relevantes (jugador y anillos pendientes)
         for anilloOri in range(1, 7):
             for anilloDest in range(1, 11):
                 if(anilloOri != anilloDest) and  (anilloOri  in self.anillos_pendientes and anilloDest  in self.anillos_pendientes):
@@ -85,18 +81,17 @@ class LaberintAnellOr:
             if(10 != anilloDest and (anilloOri  in self.anillos_pendientes and anilloDest  in self.anillos_pendientes)):
                 mapa_total[('10')][str(anilloDest)] = self.calcular_pasos(self.anillos_pos_number.get('10'), self.anillos_pos_number.get(str(anilloDest)))
         
-
+        # Calculamos los pasos mínimos desde la posición actual del jugador a cada anillo pendiente, y viceversa
         for anilloDest in range(1, 11):
             if((anilloDest  in self.anillos_pendientes)):
                 mapa_total['0'][str(anilloDest)] = self.calcular_pasos(self.posicion, self.anillos_pos_number.get(str(anilloDest)))
                 mapa_total[(str(anilloOri))]['0'] = self.calcular_pasos(self.anillos_pos_number.get(str(anilloOri)), self.posicion)
         
-        
         heuristica = {str(i): len(self.anillos_pendientes) for i in range(0, 11)}
 
 
 
-       
+       # Para el problema de búsqueda, el estado incluirá la posición actual del jugador y un registro de los anillos ya visitados en esta ruta. Además, el problema tendrá conocimiento de los anillos que ya se han recogido en turnos anteriores para aplicar las reglas de bloqueo.
         anillos_visited = frozenset(['0'])
         for i in range(1, 11):
             if i not in self.anillos_pendientes:
@@ -142,6 +137,7 @@ class LaberintAnellOr:
             r, c = self.getPosicionLibre()
             self.tablero[r][c] = rango
             posicions.append((r, c))
+            # Guardamos la posición de cada anillo con su número correspondiente para facilitar la conversión entre nodos y posiciones reales
             self.anillos_pos_number[(str)(offset + i + 1)] = (r, c)
         return posicions
 
@@ -243,6 +239,7 @@ if __name__ == "__main__":
         cmd = input("Acció: ").lower()
         
         nova_pos = list(juego.posicion)
+        #Elección de que hacer segun el comando del usuario
         if cmd == 'w': 
             nova_pos[0] -= 1
             juego.mover(tuple(nova_pos))
@@ -259,7 +256,6 @@ if __name__ == "__main__":
             print("\n--- GOD MODE: ---")
             juego.recalcular_ruta()
             if juego.nodo_meta:
-                # --- MODIFICADO: Uso correcto del método path() ---
                 camino_nodos = juego.nodo_meta.path() 
                 ruta_str = []
                 for nodo in camino_nodos:
@@ -267,7 +263,6 @@ if __name__ == "__main__":
                     if id_nodo == '0':
                         ruta_str.append(f"Jugador{juego.posicion}")
                     else:
-                        # --- MODIFICADO: Conversión de ID de nodo a coordenadas reales ---
                         pos = juego.anillos_pos_number.get(id_nodo)
                         ruta_str.append(f"Anillo {id_nodo}{pos}")
                 print(" -> ".join(ruta_str))
