@@ -27,7 +27,7 @@ class LaberintAnellOr:
         self.pasos = 0
         self.nodo_meta = None
         self.mapa=None
-        self.heuristica=None
+        self.heuristica = {}
         self.problema=None
         self.iniciarJuego()
         self.minimo_coste=0;
@@ -87,9 +87,24 @@ class LaberintAnellOr:
                 mapa_total['0'][str(anilloDest)] = self.calcular_pasos(self.posicion, self.anillos_pos_number.get(str(anilloDest)))
                 mapa_total[(str(anilloOri))]['0'] = self.calcular_pasos(self.anillos_pos_number.get(str(anilloOri)), self.posicion)
         
-        heuristica = {str(i): len(self.anillos_pendientes) for i in range(0, 11)}
 
-
+        nodo_meta_id = '10'  # El anillo de oro es tu meta final
+        pos_meta = self.anillos_pos_number.get(nodo_meta_id)
+        for i in range(0, 11):
+            nodo_actual_id = str(i)
+            
+            if nodo_actual_id == '0':
+                # Distancia desde la posición actual del jugador hasta la meta
+                pos_actual = self.posicion
+            else:
+                # Distancia desde la posición de este anillo hasta la meta
+                pos_actual = self.anillos_pos_number.get(nodo_actual_id)
+                
+            if pos_actual and pos_meta:
+                # Guardamos el cálculo geométrico aproximado en el diccionario de la heurística
+                self.heuristica[nodo_actual_id] = self.heuristicaCalc(pos_actual, pos_meta)
+            else:
+                self.heuristica[nodo_actual_id] = 0
 
        # Para el problema de búsqueda, el estado incluirá la posición actual del jugador y un registro de los anillos ya visitados en esta ruta. Además, el problema tendrá conocimiento de los anillos que ya se han recogido en turnos anteriores para aplicar las reglas de bloqueo.
         anillos_visited = frozenset(['0'])
@@ -99,7 +114,7 @@ class LaberintAnellOr:
 
         problema = ProblemaConMemoria(initial='0', goal='10', graph=mapa_total, visitados=anillos_visited)
 
-        return mapa_total, heuristica, problema
+        return mapa_total, self.heuristica, problema
 
 
     #def calcular_mejor_movimiento(self):
@@ -187,7 +202,7 @@ class LaberintAnellOr:
         print(f"\nCost: {self.pasos}")
         print(f"Recollits: B:{self.recojidos['B']}/{BRONZE} P:{self.recojidos['P']}/{PLATA} O:{self.recojidos['O']}/{ORO}")
 
-    def heuristica(self, pos1, pos2):
+    def heuristicaCalc(self, pos1, pos2):
         return max(abs(pos1[0] - pos2[0]), abs(pos1[1] - pos2[1]))
 
     def calcular_pasos(self, inicio, destino):
@@ -270,7 +285,7 @@ if __name__ == "__main__":
                 print("No se puede calcular una ruta válida.")
         elif cmd == 'h':
             print("\n--- HINT: ---")
-            print("Próximo movimiento recomendado por A*:")
+            print("Próximo movimiento:")
             juego.recalcular_ruta()
             if juego.nodo_meta:
                 camino_nodos = juego.nodo_meta.path()
